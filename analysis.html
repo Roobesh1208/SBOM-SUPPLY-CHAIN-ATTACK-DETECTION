@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SBOM Security Analysis</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef3f8;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px #ccc;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1d3557;
+            margin-bottom: 25px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background: #1976d2;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f7f7f7;
+        }
+
+        button {
+            margin-top: 25px;
+            margin-right: 10px;
+            padding: 12px 22px;
+            border: none;
+            border-radius: 5px;
+            background: #1976d2;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #125aa0;
+        }
+
+        .safe {
+            color: green;
+            font-weight: bold;
+        }
+
+        .warning {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .danger {
+            color: red;
+            font-weight: bold;
+        }
+
+        #result {
+            margin-top: 25px;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .result-safe {
+            color: green;
+            background: #e8f5e9;
+            border-radius: 5px;
+        }
+
+        .result-danger {
+            color: red;
+            background: #ffebee;
+            border-radius: 5px;
+        }
+
+        .no-data {
+            color: red;
+            font-weight: bold;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>SBOM Component Analysis</h1>
+
+    <!-- SBOM Component Table -->
+
+    <table>
+
+        <thead>
+
+            <tr>
+                <th>S.No</th>
+                <th>Component Name</th>
+                <th>Version</th>
+                <th>Type</th>
+                <th>Security Status</th>
+                <th>Risk Level</th>
+            </tr>
+
+        </thead>
+
+        <tbody id="componentTable">
+
+        </tbody>
+
+    </table>
+
+
+    <!-- Detect Button -->
+
+    <button onclick="scanSBOM()">
+        Detect Supply Chain Attack
+    </button>
+
+
+    <!-- Result -->
+
+    <div id="result"></div>
+
+
+    <br>
+
+
+    <!-- Report Button -->
+
+    <button onclick="viewReport()">
+        View Security Report
+    </button>
+
+
+    <!-- Home Button -->
+
+    <button onclick="window.location.href='home.html'">
+        Back to Home
+    </button>
+
+</div>
+
+
+<script>
+
+    // Get SBOM data from localStorage
+
+    let sbomData = JSON.parse(localStorage.getItem("sbomData"));
+
+    let table = document.getElementById("componentTable");
+
+
+    // Check SBOM data
+
+    if (sbomData && sbomData.components) {
+
+        sbomData.components.forEach(function(component, index) {
+
+            let row = table.insertRow();
+
+            row.insertCell(0).innerHTML = index + 1;
+
+            row.insertCell(1).innerHTML =
+                component.name || "Unknown";
+
+            row.insertCell(2).innerHTML =
+                component.version || "Unknown";
+
+            row.insertCell(3).innerHTML =
+                component.type || "library";
+
+            row.insertCell(4).innerHTML =
+                "Not Scanned";
+
+            row.insertCell(5).innerHTML =
+                "Unknown";
+
+        });
+
+    }
+
+    else {
+
+        table.innerHTML =
+            "<tr>" +
+            "<td colspan='6' class='no-data'>" +
+            "No SBOM data found" +
+            "</td>" +
+            "</tr>";
+
+    }
+
+
+    // Supply Chain Attack Detection
+
+    function scanSBOM() {
+
+        if (!sbomData || !sbomData.components) {
+
+            document.getElementById("result").innerHTML =
+                "No SBOM data available.";
+
+            return;
+        }
+
+
+        let rows = table.rows;
+
+        let suspiciousCount = 0;
+
+
+        sbomData.components.forEach(function(component, index) {
+
+            let name =
+                (component.name || "").toLowerCase();
+
+
+            let statusCell =
+                rows[index].cells[4];
+
+            let riskCell =
+                rows[index].cells[5];
+
+
+            /*
+             * Local demo detection rule.
+             * This is NOT a live vulnerability database.
+             */
+
+
+            if (name.includes("unknown")) {
+
+                statusCell.innerHTML =
+                    "Suspicious";
+
+                statusCell.className =
+                    "danger";
+
+                riskCell.innerHTML =
+                    "High";
+
+                riskCell.className =
+                    "danger";
+
+                suspiciousCount++;
+
+            }
+
+            else {
+
+                statusCell.innerHTML =
+                    "No Local Alert";
+
+                statusCell.className =
+                    "safe";
+
+                riskCell.innerHTML =
+                    "Low";
+
+                riskCell.className =
+                    "safe";
+
+            }
+
+        });
+
+
+        // Display final result
+
+        if (suspiciousCount > 0) {
+
+            document.getElementById("result").innerHTML =
+                "⚠ Suspicious components detected: " +
+                suspiciousCount;
+
+            document.getElementById("result").className =
+                "result-danger";
+
+        }
+
+        else {
+
+            document.getElementById("result").innerHTML =
+                "✓ No suspicious components detected by the local demo rule.";
+
+            document.getElementById("result").className =
+                "result-safe";
+
+        }
+
+    }
+
+
+    // Open Report Page
+
+    function viewReport() {
+
+        window.location.href = "report.html";
+
+    }
+
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SBOM Security System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f5f9;
+            text-align: center;
+            margin-top: 80px;
+        }
+
+        .container {
+            background: white;
+            width: 500px;
+            margin: auto;
+            padding: 35px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #ccc;
+        }
+
+        h1 {
+            color: #1d3557;
+        }
+
+        input {
+            margin: 20px;
+        }
+
+        button {
+            padding: 12px 25px;
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #125aa0;
+        }
+
+        #message {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Supply Chain Attack Detection using SBOM</h1>
+
+    <h2>Welcome to Home Page</h2>
+
+    <p>Login successful!</p>
+
+    <input type="file" id="sbomFile" accept=".json">
+
+    <br>
+
+    <button onclick="uploadSBOM()">Upload SBOM</button>
+
+    <p id="message"></p>
+
+</div>
+
+<script>
+function uploadSBOM() {
+
+    const fileInput = document.getElementById("sbomFile");
+    const message = document.getElementById("message");
+
+    if (fileInput.files.length === 0) {
+        message.innerHTML = "Please choose an SBOM JSON file.";
+        return;
+    }
+
+    const file = fileInput.files[0];
+
+    const reader = new FileReader();
+
+    reader.onload = function(event) {
+
+        try {
+
+            const sbomData = JSON.parse(event.target.result);
+
+            if (!sbomData.components) {
+                message.innerHTML = "Invalid SBOM file.";
+                return;
+            }
+
+            localStorage.setItem(
+                "sbomData",
+                JSON.stringify(sbomData)
+            );
+
+            message.innerHTML =
+                "SBOM uploaded successfully!";
+
+            setTimeout(function() {
+                window.location.href = "analysis.html";
+            }, 1000);
+
+        } catch (error) {
+
+            message.innerHTML =
+                "Invalid JSON file.";
+        }
+    };
+
+    reader.readAsText(file);
+}
+</script>
+
+</body>
+</html>
